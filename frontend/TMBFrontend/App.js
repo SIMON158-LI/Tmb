@@ -1,20 +1,36 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import * as SecureStore from 'expo-secure-store';
+import LoginScreen from './src/screens/LoginScreen';
+import RegisterScreen from './src/screens/RegisterScreen';
 
 export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
-}
+  const [user, setUser] = useState(null);
+  const [screen, setScreen] = useState('login');
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+  useEffect(() => {
+    SecureStore.getItemAsync('token').then(token => {
+      if (token) setScreen('home');
+    });
+  }, []);
+
+  const handleLogin = (userData) => {
+    setUser(userData);
+    setScreen('home');
+  };
+
+  const handleLogout = async () => {
+    await SecureStore.deleteItemAsync('token');
+    setUser(null);
+    setScreen('login');
+  };
+
+  if (screen === 'login') {
+    return <LoginScreen onLogin={handleLogin} onGoRegister={() => setScreen('register')} />;
+  }
+
+  if (screen === 'register') {
+    return <RegisterScreen onLogin={handleLogin} onGoLogin={() => setScreen('login')} />;
+  }
+
+  return null;
+}
